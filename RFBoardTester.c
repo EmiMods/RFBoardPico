@@ -102,7 +102,7 @@ void sendCommand(int command[10])
 
 void setGreenLEDs(bool q1, bool q2, bool q3, bool q4)
 {
-    int builtCommand[10] = {0,0,1,0,1,0,0,0,0,0,};;
+    int builtCommand[10] = {0,0,1,0,1,0,0,0,0,0};
     builtCommand[6] = !q4 ? 0 : 1;
     builtCommand[7] = !q3 ? 0 : 1;
     builtCommand[8] = !q2 ? 0 : 1;
