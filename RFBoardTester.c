@@ -73,18 +73,13 @@ void blinkDebugHighLow(bool condition)
 {
     if (condition)
     {
-        setPicoLED(true);
-        sleep_ms(100);
-        setPicoLED(false);
-        sleep_ms(100);
-        setPicoLED(true);
-        sleep_ms(100);
-        setPicoLED(false);
-        sleep_ms(100);
-        setPicoLED(true);
-        sleep_ms(100);
-        setPicoLED(false);
-        sleep_ms(100);
+        for (int i = 0; i < 3; i++)
+        {
+            setPicoLED(true);
+            sleep_ms(100);
+            setPicoLED(false);
+            sleep_ms(100);
+        }
     } else {
         setPicoLED(true);
         sleep_ms(1000);
