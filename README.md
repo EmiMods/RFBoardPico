@@ -1,4 +1,4 @@
-Currently only tested with Argon (phat). Simply throw the RFBoardTester.uf2 in your pico dir. Guide in-progress for install and RF Board (Argon/Boron) technical doc.
+Simply throw the respective (Phat/Slim) RFBoardTester_XXXX.uf2 in your pico directory. Guide in-progress for install along with RF Board (Argon/Boron) technical doc.
 
 GP0 = ARGON_CLOCK
 

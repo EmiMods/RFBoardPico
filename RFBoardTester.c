@@ -15,26 +15,31 @@ int CMD_LED_INIT_ANIM[10] = {0,0,1,0,0,0,0,1,0,1};
 int CMD_LED_INIT_ANIM_NOPWR[10] = {0,0,1,0,0,0,1,0,0,1};
 int CMD_LED_INIT_ANIM_BLNKPWR[10] = {0,0,1,0,0,0,1,1,0,1};
 int CMD_LED_CLEAR_GREEN[10] = {0,0,1,0,1,0,0,0,0,0};
-int CMD_LED_CLEAR_RED[10] = {0,0,1,0,1,1,0,0,0,0};
 int CMD_LED_GREEN_ALL[10] = {0,0,1,0,1,0,1,1,1,1};
-int CMD_LED_RED_ALL[10] = {0,0,1,0,1,1,1,1,1,1};
-int CMD_LED_AMBER_ALL[10] = {0,0,1,1,1,0,1,1,1,1};
+int CMD_LED_ARGON_CLEAR_RED[10] = {0,0,1,0,1,1,0,0,0,0};
+int CMD_LED_ARGON_RED_ALL[10] = {0,0,1,0,1,1,1,1,1,1};
+int CMD_LED_ARGON_AMBER_ALL[10] = {0,0,1,1,1,0,1,1,1,1};
 int CMD_LED_CLEAR_OVERRIDE[10] = {0,0,1,0,0,1,0,0,0,0};
-int CMD_CONFIG_ARGON_HORIZONTAL[10] = {0,0,0,0,0,1,0,0,0,0};
-int CMD_CONFIG_ARGON_VERTICAL[10] = {0,0,0,0,0,1,0,0,0,1};
+int CMD_CONFIG_HORIZONTAL[10] = {0,0,0,0,0,1,0,0,0,0};
+int CMD_CONFIG_VERTICAL[10] = {0,0,0,0,0,1,0,0,0,1};
 
+// Boron specific commands
+int CMD_LED_BORON_POWER_RED[10] = {0,0,1,0,1,1,1,0,0,0};
+int CMD_LED_BORON_POWER_GREEN_GLOWBLNK[10] = {0,0,1,0,1,1,1,1,1,1};
 
+// Init pico GPIO
 void initPins()
 {
     gpio_init(PIN_GP0_CLOCK);
     gpio_set_dir(PIN_GP0_CLOCK, GPIO_IN);
-    gpio_pull_up(PIN_GP0_CLOCK);
+    gpio_pull_up(PIN_GP0_CLOCK);    // Necessary to initiate clock cycling
 
     gpio_init(PIN_GP1_DATA);
     gpio_set_dir(PIN_GP1_DATA, GPIO_OUT);
     gpio_pull_up(PIN_GP1_DATA);
 }
 
+// Init pico LED
 int initLED(void) 
 {
     #if defined(PICO_DEFAULT_LED_PIN)
@@ -47,12 +52,13 @@ int initLED(void)
     #endif
 }
 
-void setPicoLED(bool led_on) 
+// Set LED on/off on the pico
+void setPicoLED(bool enable) 
 {
     #if defined(PICO_DEFAULT_LED_PIN)
-        gpio_put(PICO_DEFAULT_LED_PIN, led_on);
+        gpio_put(PICO_DEFAULT_LED_PIN, enable);
     #elif defined(CYW43_WL_GPIO_LED_PIN)
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, enable);
     #endif
 }
 
@@ -62,7 +68,7 @@ void blockingWaitClockChange(bool prevClock)
     while (prevClock == gpio_get(PIN_GP0_CLOCK)) {}
 }
 
-// Blinks rapidly 3 times for HIGH, 1 long blink for LOW
+// Blinks pico rapidly 3 times for HIGH, 1 long blink for LOW
 void blinkDebugHighLow(bool condition)
 {
     if (condition)
@@ -87,10 +93,11 @@ void blinkDebugHighLow(bool condition)
     }
 }
 
+// Send command to RF board
 void sendCommand(int command[10])
 {
-    int prevClock = 1;  // Start on clock high
-    gpio_put(PIN_GP1_DATA, LOW);    // Signal start of command
+    int prevClock = 0;  // Start on clock low
+    gpio_put(PIN_GP1_DATA, LOW);    // Signal start SMC->FPM communication
 
     for (int i = 0; i < 10; i++) 
     {   
@@ -102,14 +109,14 @@ void sendCommand(int command[10])
         prevClock = gpio_get(PIN_GP0_CLOCK);   
     }
 
-    gpio_put(PIN_GP1_DATA, HIGH);   // Signal command complete
-
     // Wait a full clock cycle after issuing command.
     // This is necessary to chain more than one command consecutively
     blockingWaitClockChange(prevClock);
     prevClock = gpio_get(PIN_GP0_CLOCK);   
     blockingWaitClockChange(prevClock);
     prevClock = gpio_get(PIN_GP0_CLOCK);
+
+    gpio_put(PIN_GP1_DATA, HIGH);   // Signal command complete
 }
 
 // turns on pico LED at start of command and turns it off once send is complete.
@@ -133,7 +140,8 @@ void setGreenLEDs(bool q1, bool q2, bool q3, bool q4)
 }
 
 // Sets red leds to on/off (upper_left, upper_right, lower_left, lower_right)
-void setRedLEDs(bool q1, bool q2, bool q3, bool q4)
+// Only works on Argon RF boards, as Boron only have a single red power light
+void setRedArgonLEDs(bool q1, bool q2, bool q3, bool q4)
 {
     int builtCommand[10] = {0,0,1,0,1,1,0,0,0,0};
     builtCommand[6] = !q4 ? 0 : 1;
@@ -144,7 +152,8 @@ void setRedLEDs(bool q1, bool q2, bool q3, bool q4)
     sendCommand(builtCommand);
 }
 
-void playSpinningRGYAnimation()
+// Spinning clockwise animation for Argon RF boards
+void playArgonSpinningRGYAnimation()
 {
     int delay = 75;
     int clearDelay = 25;
@@ -160,17 +169,17 @@ void playSpinningRGYAnimation()
 
     // Red circle nofill
     setGreenLEDs(false, false, false, false);
-    setRedLEDs(true, false, false, false);
+    setRedArgonLEDs(true, false, false, false);
     sleep_ms(delay);
-    setRedLEDs(false, true, false, false);
+    setRedArgonLEDs(false, true, false, false);
     sleep_ms(delay);
-    setRedLEDs(false, false, false, true);
+    setRedArgonLEDs(false, false, false, true);
     sleep_ms(delay);
-    setRedLEDs(false, false, true, false);
+    setRedArgonLEDs(false, false, true, false);
     sleep_ms(delay);
 
     // Green circle fill
-    sendCommand(CMD_LED_CLEAR_RED);
+    sendCommand(CMD_LED_ARGON_CLEAR_RED);
     setGreenLEDs(true, false, false, false);
     sleep_ms(delay);
     setGreenLEDs(true, true, false, false);
@@ -182,16 +191,16 @@ void playSpinningRGYAnimation()
 
     // Red circle fill
     setGreenLEDs(false, true, true, true);
-    setRedLEDs(true, false, false, false);
+    setRedArgonLEDs(true, false, false, false);
     sleep_ms(delay);
     setGreenLEDs(false, false, true, true);
-    setRedLEDs(true, true, false, false);
+    setRedArgonLEDs(true, true, false, false);
     sleep_ms(delay);
     setGreenLEDs(false, false, true, false);
-    setRedLEDs(true, true, false, true);
+    setRedArgonLEDs(true, true, false, true);
     sleep_ms(delay);
     sendCommand(CMD_LED_CLEAR_GREEN);
-    setRedLEDs(true, true, true, true);
+    setRedArgonLEDs(true, true, true, true);
     sleep_ms(delay);
 
     // Yellow circle fill
@@ -206,20 +215,22 @@ void playSpinningRGYAnimation()
 
     // Off circle
     setGreenLEDs(false, true, true, true);
-    setRedLEDs(false, true, true, true);
+    setRedArgonLEDs(false, true, true, true);
     sleep_ms(clearDelay);
     setGreenLEDs(false, false, true, true);
-    setRedLEDs(false, false, true, true);
+    setRedArgonLEDs(false, false, true, true);
     sleep_ms(clearDelay);
     setGreenLEDs(false, false, true, false);
-    setRedLEDs(false, false, true, false);
+    setRedArgonLEDs(false, false, true, false);
     sleep_ms(clearDelay);
 
     sendCommand(CMD_LED_CLEAR_GREEN);
-    sendCommand(CMD_LED_CLEAR_RED);
+    sendCommand(CMD_LED_ARGON_CLEAR_RED);
 }
 
-void playRGYAnimation()
+
+// LED testing animation for Argon RF boards
+void playArgonRGYAnimation()
 {
     int delay = 125;
     setGreenLEDs(true, false, false, false);
@@ -232,16 +243,16 @@ void playRGYAnimation()
     sleep_ms(delay);
 
     setGreenLEDs(false, true, true, true);
-    setRedLEDs(true, false, false, false);
+    setRedArgonLEDs(true, false, false, false);
     sleep_ms(delay);
     setGreenLEDs(false, false, true, true);
-    setRedLEDs(true, true, false, false);
+    setRedArgonLEDs(true, true, false, false);
     sleep_ms(delay);
     setGreenLEDs(false, false, false, true);
-    setRedLEDs(true, true, true, false);
+    setRedArgonLEDs(true, true, true, false);
     sleep_ms(delay);
     setGreenLEDs(false, false, false, false);
-    setRedLEDs(true, true, true, true);
+    setRedArgonLEDs(true, true, true, true);
     sleep_ms(delay);
 
     setGreenLEDs(true, false, false, false);
@@ -254,48 +265,84 @@ void playRGYAnimation()
     sleep_ms(delay);
 
     setGreenLEDs(false, true, true, true);
-    setRedLEDs(false, true, true, true);
+    setRedArgonLEDs(false, true, true, true);
     sleep_ms(delay);
     setGreenLEDs(false, false, true, true);
-    setRedLEDs(false, false, true, true);
+    setRedArgonLEDs(false, false, true, true);
     sleep_ms(delay);
     setGreenLEDs(false, false, false, true);
-    setRedLEDs(false, false, false, true);
+    setRedArgonLEDs(false, false, false, true);
     sleep_ms(delay);
     setGreenLEDs(false, false, false, false);
-    setRedLEDs(false, false, false, false);
+    setRedArgonLEDs(false, false, false, false);
     sleep_ms(delay);
 }
 
-void playAltXAnimation()
+// Alternating X (/ \) animation for Argon RF boards
+void playArgonAltXAnimation()
 {
-    int delay = 250;
+    int delay = 125;
     setGreenLEDs(true, false, false, true);
-    setRedLEDs(false, true, true, false);
+    setRedArgonLEDs(false, true, true, false);
     sleep_ms(delay);
     setGreenLEDs(false, true, true, false);
-    setRedLEDs(true, false, false, true);
+    setRedArgonLEDs(true, false, false, true);
     sleep_ms(delay);    
     
     setGreenLEDs(true, false, false, true);
-    setRedLEDs(false, true, true, false);
+    setRedArgonLEDs(false, true, true, false);
     sleep_ms(delay);
     setGreenLEDs(false, true, true, false);
-    setRedLEDs(true, false, false, true);
+    setRedArgonLEDs(true, false, false, true);
     sleep_ms(delay);
 
     sendCommand(CMD_LED_GREEN_ALL);
-    setRedLEDs(false, true, true, false);
+    setRedArgonLEDs(false, true, true, false);
     sleep_ms(delay);
-    setRedLEDs(true, false, false, true);
+    setRedArgonLEDs(true, false, false, true);
     sleep_ms(delay);     
-    setRedLEDs(false, true, true, false);
+    setRedArgonLEDs(false, true, true, false);
     sleep_ms(delay);
-    setRedLEDs(true, false, false, true);
+    setRedArgonLEDs(true, false, false, true);
     sleep_ms(delay);
 
     sendCommand(CMD_LED_CLEAR_GREEN);
-    sendCommand(CMD_LED_CLEAR_RED);
+    sendCommand(CMD_LED_ARGON_CLEAR_RED);
+}
+
+// LED testing animation for Boron RF boards
+void playBoronRGYAnimation()
+{
+    int delay = 125;
+    sendCommand(CMD_LED_INIT_NOANIM);
+    sleep_ms(delay);
+    setGreenLEDs(true, false, false, false);
+    sleep_ms(delay);
+    setGreenLEDs(false, true, false, false);
+    sleep_ms(delay);
+    setGreenLEDs(false, false, false, true);
+    sleep_ms(delay);
+    setGreenLEDs(false, false, true, false);
+    sleep_ms(delay);
+    setGreenLEDs(true, true, true, true);
+    sleep_ms(delay);
+    setGreenLEDs(false, false, false, false);
+    sleep_ms(delay);
+
+    sendCommand(CMD_LED_BORON_POWER_RED);
+    sleep_ms(delay);
+    setGreenLEDs(true, false, false, false);
+    sleep_ms(delay);
+    setGreenLEDs(false, true, false, false);
+    sleep_ms(delay);
+    setGreenLEDs(false, false, false, true);
+    sleep_ms(delay);
+    setGreenLEDs(false, false, true, false);
+    sleep_ms(delay);
+    setGreenLEDs(true, true, true, true);
+    sleep_ms(delay);
+    setGreenLEDs(false, false, false, false);
+    sleep_ms(delay);
 }
 
 int main() 
@@ -305,12 +352,12 @@ int main()
 
     blinkDebugHighLow(false);   // Debug light to signal start of program
     initPins(); // GPIO init
-    sendCommand(CMD_LED_INIT_NOANIM_NOPWR);
-    sendCommand(CMD_CONFIG_ARGON_HORIZONTAL);
-    sendCommand(CMD_LED_CLEAR_GREEN);
-    sendCommand(CMD_LED_CLEAR_RED);
+    sendCommand(CMD_LED_INIT_NOANIM);
+    sendCommand(CMD_CONFIG_HORIZONTAL);
+
     while (true)
     {
-        playRGYAnimation();
+        playArgonRGYAnimation();
+        //playBoronRGYAnimation();
     }
 }
