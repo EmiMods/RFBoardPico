@@ -56,14 +56,10 @@ void setPicoLED(bool led_on)
     #endif
 }
 
+// Blocking wait for clock state to change. Half-cycle.
 void blockingWaitClockChange(bool prevClock)
 {
     while (prevClock == gpio_get(PIN_GP0_CLOCK)) {}
-}
-
-void blockingWaitClockCycle(bool prevClock)
-{
-
 }
 
 // Blinks rapidly 3 times for HIGH, 1 long blink for LOW
