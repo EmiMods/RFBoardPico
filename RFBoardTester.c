@@ -94,7 +94,7 @@ void sendCommand(int command[10])
 
     for (int i = 0; i < 10; i++) 
     {   
-        blockingWaitClockChange(prevClock); // Blocking wait for clock state to change
+        blockingWaitClockChange(prevClock);
         prevClock = gpio_get(PIN_GP0_CLOCK);
         gpio_put(PIN_GP1_DATA, command[i] == 0 ? LOW : HIGH);   // Yes I know ternary could be simplified to binary operation here but I like the readability.
 
@@ -120,6 +120,7 @@ void sendCommandAndDebug(int command[10])
     setPicoLED(false);
 }
 
+// Sets green leds to on/off (upper_left, upper_right, lower_left, lower_right)
 void setGreenLEDs(bool q1, bool q2, bool q3, bool q4)
 {
     int builtCommand[10] = {0,0,1,0,1,0,0,0,0,0};
@@ -131,6 +132,7 @@ void setGreenLEDs(bool q1, bool q2, bool q3, bool q4)
     sendCommand(builtCommand);
 }
 
+// Sets red leds to on/off (upper_left, upper_right, lower_left, lower_right)
 void setRedLEDs(bool q1, bool q2, bool q3, bool q4)
 {
     int builtCommand[10] = {0,0,1,0,1,1,0,0,0,0};
@@ -212,7 +214,6 @@ void playSpinningRGYAnimation()
     setGreenLEDs(false, false, true, false);
     setRedLEDs(false, false, true, false);
     sleep_ms(clearDelay);
-
 
     sendCommand(CMD_LED_CLEAR_GREEN);
     sendCommand(CMD_LED_CLEAR_RED);
