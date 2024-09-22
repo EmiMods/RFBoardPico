@@ -6,8 +6,11 @@
 
 bool LOW = false;
 bool HIGH = true;
+
 int PIN_GP0_CLOCK = 0;
 int PIN_GP1_DATA = 1;
+
+// All commands are 9-bit with a preceding acknowledgement bit, forming a 10-bit construct
 int CMD_LED_INIT_NOANIM[10] = {0,0,1,0,0,0,0,1,0,0};
 int CMD_LED_INIT_NOANIM_NOPWR[10] = {0,0,1,0,0,0,1,0,0,0};
 int CMD_LED_INIT_NOANIM_BLNKPWR[10] = {0,0,1,0,0,0,1,1,0,0};    // Consistent blinking, not a single blink
