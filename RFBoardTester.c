@@ -7,8 +7,8 @@
 bool LOW = false;
 bool HIGH = true;
 
-int PIN_GP0_CLOCK = 0;
-int PIN_GP1_DATA = 1;
+int PIN_GP1_DATA = 0;
+int PIN_GP0_CLOCK = 1;
 
 // All commands are 9-bit with a preceding acknowledgement bit, forming a 10-bit construct
 int CMD_LED_INIT_NOANIM[10] = {0,0,1,0,0,0,0,1,0,0};
@@ -99,19 +99,19 @@ void sendCommand(int command[10])
 
     for (int i = 0; i < 10; i++) 
     {   
-        blockingWaitClockChange(prevClock);
+        blockingWaitClockChange(prevClock); // Wait until LOW
         prevClock = gpio_get(PIN_GP0_CLOCK);
         gpio_put(PIN_GP1_DATA, command[i] == 0 ? LOW : HIGH);   // Yes I know ternary could be simplified to binary operation here but I like the readability.
 
-        blockingWaitClockChange(prevClock);
+        blockingWaitClockChange(prevClock); // Wait until HIGH
         prevClock = gpio_get(PIN_GP0_CLOCK);   
     }
 
     // Wait a full clock cycle after issuing command.
     // This is necessary to chain more than one command consecutively
-    blockingWaitClockChange(prevClock);
+    blockingWaitClockChange(prevClock); // Wait until LOW
     prevClock = gpio_get(PIN_GP0_CLOCK);   
-    blockingWaitClockChange(prevClock);
+    blockingWaitClockChange(prevClock); // Wait until HIGH
     prevClock = gpio_get(PIN_GP0_CLOCK);
 
     gpio_put(PIN_GP1_DATA, HIGH);   // Signal command complete
