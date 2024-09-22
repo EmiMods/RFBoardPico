@@ -8,3 +8,5 @@ GP0 =   ARGON_DATA  /  BORONFPM_DATA
 GP1 =   ARGON_CLK  /  BORONFPM_CLK
 
 ---------------------------------
+
+Install guide and Xbox 360 RF board technical doc coming soon!
