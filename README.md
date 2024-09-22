@@ -3,8 +3,8 @@ Simply throw the respective (Phat/Slim) RFBoardTester_XXXX.uf2 in your pico dire
 [RFBoardTester_v1.0.1.zip](https://github.com/user-attachments/files/17088362/RFBoardTester_v1.0.1.zip)
 
 ---------------------------------
-GP0 = ARGON_DATA / BORONFPM_DATA
+GP0 =   ARGON_DATA  /  BORONFPM_DATA
 
-GP1 = ARGON_CLK / BORONFPM_CLK
+GP1 =   ARGON_CLK  /  BORONFPM_CLK
 
 ---------------------------------
