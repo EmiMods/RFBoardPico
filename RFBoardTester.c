@@ -29,6 +29,8 @@ int CMD_CONFIG_VERTICAL[10] = {0,0,0,0,0,1,0,0,0,1};
 // Boron specific commands
 int CMD_LED_BORON_POWER_RED[10] = {0,0,1,0,1,1,1,0,0,0};
 int CMD_LED_BORON_POWER_GREEN_GLOWBLNK[10] = {0,0,1,0,1,1,1,1,1,1};
+int CMD_LED_BORON_ROM_BLNKPWR_RED[10] = {0,0,1,0,1,1,1,1,0,0};
+int CMD_LED_BORON_ROM_BOOTANIM_REDPWR[10] = {0,0,1,0,1,1,0,1,1,1};
 
 // Init pico GPIO
 void initPins()
@@ -341,6 +343,13 @@ void playBoronRGYAnimation()
     sleep_ms(delay);
     setGreenLEDs(false, false, false, false);
     sleep_ms(delay);
+}
+
+// Standby/idle glow animation for Borons
+void playBoronGlowIdleAnimation()
+{
+    sendCommand(CMD_LED_BORON_POWER_GREEN_GLOWBLNK);
+    sleep_ms(8500);
 }
 
 int main() 
