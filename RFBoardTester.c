@@ -7,8 +7,8 @@
 bool LOW = false;
 bool HIGH = true;
 
-int PIN_GP1_DATA = 0;
-int PIN_GP0_CLOCK = 1;
+int PIN_GP0_DATA = 0;
+int PIN_GP1_CLOCK = 1;
 
 // All commands are 9-bit with a preceding acknowledgement bit, forming a 10-bit construct
 int CMD_LED_INIT_NOANIM[10] = {0,0,1,0,0,0,0,1,0,0};
@@ -33,13 +33,13 @@ int CMD_LED_BORON_POWER_GREEN_GLOWBLNK[10] = {0,0,1,0,1,1,1,1,1,1};
 // Init pico GPIO
 void initPins()
 {
-    gpio_init(PIN_GP0_CLOCK);
-    gpio_set_dir(PIN_GP0_CLOCK, GPIO_IN);
-    gpio_pull_up(PIN_GP0_CLOCK);    // Necessary to initiate clock cycling
+    gpio_init(PIN_GP1_CLOCK);
+    gpio_set_dir(PIN_GP1_CLOCK, GPIO_IN);
+    gpio_pull_up(PIN_GP1_CLOCK);    // Necessary to initiate clock cycling
 
-    gpio_init(PIN_GP1_DATA);
-    gpio_set_dir(PIN_GP1_DATA, GPIO_OUT);
-    gpio_pull_up(PIN_GP1_DATA);
+    gpio_init(PIN_GP0_DATA);
+    gpio_set_dir(PIN_GP0_DATA, GPIO_OUT);
+    gpio_pull_up(PIN_GP0_DATA);
 }
 
 // Init pico LED
@@ -68,7 +68,7 @@ void setPicoLED(bool enable)
 // Blocking wait for clock state to change. Half-cycle.
 void blockingWaitClockChange(bool prevClock)
 {
-    while (prevClock == gpio_get(PIN_GP0_CLOCK)) {}
+    while (prevClock == gpio_get(PIN_GP1_CLOCK)) {}
 }
 
 // Blinks pico rapidly 3 times for HIGH, 1 long blink for LOW
@@ -95,26 +95,26 @@ void blinkDebugHighLow(bool condition)
 void sendCommand(int command[10])
 {
     int prevClock = 0;  // Start on clock low
-    gpio_put(PIN_GP1_DATA, LOW);    // Signal start SMC->FPM communication
+    gpio_put(PIN_GP0_DATA, LOW);    // Signal start SMC->FPM communication
 
     for (int i = 0; i < 10; i++) 
     {   
         blockingWaitClockChange(prevClock); // Wait until LOW
-        prevClock = gpio_get(PIN_GP0_CLOCK);
-        gpio_put(PIN_GP1_DATA, command[i] == 0 ? LOW : HIGH);   // Yes I know ternary could be simplified to binary operation here but I like the readability.
+        prevClock = gpio_get(PIN_GP1_CLOCK);
+        gpio_put(PIN_GP0_DATA, command[i] == 0 ? LOW : HIGH);   // Yes I know ternary could be simplified to binary operation here but I like the readability.
 
         blockingWaitClockChange(prevClock); // Wait until HIGH
-        prevClock = gpio_get(PIN_GP0_CLOCK);   
+        prevClock = gpio_get(PIN_GP1_CLOCK);   
     }
 
     // Wait a full clock cycle after issuing command.
     // This is necessary to chain more than one command consecutively
     blockingWaitClockChange(prevClock); // Wait until LOW
-    prevClock = gpio_get(PIN_GP0_CLOCK);   
+    prevClock = gpio_get(PIN_GP1_CLOCK);   
     blockingWaitClockChange(prevClock); // Wait until HIGH
-    prevClock = gpio_get(PIN_GP0_CLOCK);
+    prevClock = gpio_get(PIN_GP1_CLOCK);
 
-    gpio_put(PIN_GP1_DATA, HIGH);   // Signal command complete
+    gpio_put(PIN_GP0_DATA, HIGH);   // Signal command complete
 }
 
 // turns on pico LED at start of command and turns it off once send is complete.
