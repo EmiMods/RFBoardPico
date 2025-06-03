@@ -9,3 +9,5 @@ GP1 =   ARGON_CLK  /  BORONFPM_CLK
 ---------------------------------
 
 Install guide and Xbox 360 RF board technical doc coming soon!
+
+Huge thanks to DrTrinity for the help with all this and his work reversing the RF board functionality.
