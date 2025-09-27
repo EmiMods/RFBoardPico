@@ -14,7 +14,7 @@ Raspberry Pi Pico LED Controller Implementation
 
 INSTALL DIAGRAM
 ---------------------
-![alt text](https://github.com/EmiMods/RFBoardPico/blob/main/RFBoardDiagram.png "Install Diagram")
+![alt text](https://github.com/EmiMods/RFBoardPico/blob/main/INSTALL%20DIAGRAM.png "Install Diagram")
 
 Abstract:
 ---------------------
