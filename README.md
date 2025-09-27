@@ -12,6 +12,26 @@ Raspberry Pi Pico LED Controller Implementation
 ---------------------
 
 
+INSTALL DIAGRAM
+---------------------
+![alt text](https://github.com/EmiMods/RFBoardPico/blob/main/RFBoardDiagram.png "Install Diagram")
+
+Abstract:
+---------------------
+1. Initialize pico GPIO pins for DATA (out) and CLOCK (in).
+
+2. Pull up CLOCK and DATA pin.
+
+3. Set DATA pin LOW to prepare RF board to receive command.
+
+4. Send each consecutive bit of the 10-bit* command sequence on LOW phase of clock.
+
+5. After the final command bit’s proceeding HIGH phase of CLOCK is complete, wait one full CLOCK cycle.
+
+6. Set DATA pin HIGH while CLOCK is HIGH to signal to RF board end of command sequence.
+**Note:** Commands are actually 9-bit with a preceding acknowledgment bit. See Pico Implementation section for detailed explanation.
+
+
 What you will need:
 ---------------------
 • GPIO Pins (2x)
@@ -55,24 +75,6 @@ While the commands we will be sending are 9-bit, the acknowledgment bit precedin
 Before we can send the first command bit we need to signal to the RF board that a command is about to be sent. This is done by first setting the DATA pin LOW. We can now send the first bit of the command through the DATA pin. It should be noted that, especially with Boron RF boards, the clock phase timing is very important when sending command data. Each bit needs to be sent on the LOW side of the CLOCK cycle, which consists of one LOW and one HIGH phase. Using the CLOCK phase to time sending the data we can continue to send each consecutive bit of the command on the LOW side of the clock until we reach the end of the command. For the final command bit, once the proceeding HIGH phase of the clock’s cycle has been complete we are ready to signal the end of the command to the RF board. To do this we wait one additional full cycle of the clock and then send HIGH through the DATA pin when CLOCK is HIGH. If a full cycle is not given between the final command bit cycle and the end-of-command signifying bit the pico will be unable to execute consecutive commands properly. This sums up the detailed implementation of an LED controller for RF boards using a Raspberry Pie Pico.
 
 
-Abstract:
----------------------
-1. Initialize pico GPIO pins for DATA (out) and CLOCK (in).
 
-2. Pull up CLOCK and DATA pin.
-
-3. Set DATA pin LOW to prepare RF board to receive command.
-
-4. Send each consecutive bit of the 10-bit* command sequence on LOW phase of clock.
-
-5. After the final command bit’s proceeding HIGH phase of CLOCK is complete, wait one full CLOCK cycle.
-
-6. Set DATA pin HIGH while CLOCK is HIGH to signal to RF board end of command sequence.
-**Note:** Commands are actually 9-bit with a preceding acknowledgment bit. See Pico Implementation section for detailed explanation.
-
-
-INSTALL DIAGRAM
----------------------
-![alt text](https://github.com/EmiMods/RFBoardPico/blob/main/RFBoardDiagram.png "Install Diagram")
 <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
 Big thanks to DrTrinity for the help and work reversing the RF board functionality :)
